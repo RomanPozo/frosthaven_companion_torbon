@@ -63,7 +63,7 @@ Asistente paso a paso por las 5 subfases oficiales:
 Abre la dirección de GitHub Pages del proyecto:
 
 ```
-https://TU-USUARIO.github.io/NOMBRE-DEL-REPOSITORIO/
+https://romanpozo.github.io/frosthaven_companion_torbon/
 ```
 
 En el móvil puedes usar **"Añadir a pantalla de inicio"** para tenerla como una app más.
