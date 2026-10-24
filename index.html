@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Compañero de campaña para Frosthaven: calendario de semanas, guía de la Fase de Puesto Avanzado, árbol de escenarios y galería local de momentos épicos." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Frosthaven Companion</title>
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Cg stroke='%2338bdf8' stroke-width='4' stroke-linecap='round' fill='none'%3E%3Cpath d='M32 10v44M13 21l38 22M13 43l38-22'/%3E%3Cpath d='M26 14l6 6 6-6M26 50l6-6 6 6'/%3E%3C/g%3E%3C/svg%3E" />
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind (Play CDN, versión fijada) -->
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fh: {
+              night: '#0f172a',
+              slate: '#1e293b',
+              steel: '#334155',
+              ice: '#38bdf8',
+              gold: '#f59e0b',
+              blood: '#ef4444',
+            },
+          },
+          fontFamily: {
+            display: ['Cinzel', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          boxShadow: {
+            ice: '0 0 0 1px rgba(56,189,248,.35), 0 0 18px rgba(56,189,248,.25)',
+            gold: '0 0 0 1px rgba(245,158,11,.45), 0 0 18px rgba(245,158,11,.25)',
+            blood: '0 0 0 1px rgba(239,68,68,.45), 0 0 18px rgba(239,68,68,.2)',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Iconos (Lucide UMD, versión fijada) -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="min-h-full bg-fh-night text-slate-200 font-sans antialiased">
+  <a href="#main" class="skip-link">Saltar al contenido</a>
+
+  <!-- ============ HEADER / DASHBOARD (sticky) ============ -->
+  <header id="app-header" class="app-header sticky top-0 z-40">
+    <div class="mx-auto max-w-6xl px-4 pt-3 pb-2">
+      <!-- Fila 1: nombre + backups -->
+      <div class="flex items-center gap-2">
+        <div class="campaign-name-wrap flex-1 min-w-0">
+          <label for="campaign-name" class="sr-only">Nombre de la campaña</label>
+          <input
+            id="campaign-name"
+            type="text"
+            maxlength="80"
+            autocomplete="off"
+            spellcheck="false"
+            value="Campaña de Frosthaven"
+            class="campaign-name-input font-display"
+            title="Toca para editar el nombre de la campaña"
+          />
+          <i data-lucide="pencil" class="campaign-name-icon" aria-hidden="true"></i>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btn-export" type="button" class="btn btn-ghost btn-icon-sm" title="Exportar backup (JSON)">
+            <i data-lucide="download" aria-hidden="true"></i>
+            <span class="hidden md:inline">Exportar</span>
+          </button>
+          <button id="btn-import" type="button" class="btn btn-ghost btn-icon-sm" title="Cargar backup (JSON)">
+            <i data-lucide="upload" aria-hidden="true"></i>
+            <span class="hidden md:inline">Cargar</span>
+          </button>
+          <input id="import-file" type="file" accept="application/json,.json" class="hidden" />
+        </div>
+      </div>
+
+      <!-- Fila 2: semana / año / estación -->
+      <div class="mt-2 flex items-stretch gap-2" aria-live="polite">
+        <div class="stat-chip">
+          <span class="stat-chip__label">Semana</span>
+          <span class="stat-chip__value"><span id="hdr-week">1</span><span class="stat-chip__muted">/80</span></span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-chip__label">Año</span>
+          <span class="stat-chip__value"><span id="hdr-year">1</span><span class="stat-chip__muted">/4</span></span>
+        </div>
+        <div id="hdr-season" class="season-badge season-badge--summer" data-season="summer">
+          <span class="season-badge__icon"><i data-lucide="sun" aria-hidden="true"></i></span>
+          <span class="flex flex-col leading-tight min-w-0">
+            <span class="stat-chip__label">Estación</span>
+            <span id="hdr-season-label" class="season-badge__label">Verano</span>
+          </span>
+          <span id="hdr-season-week" class="season-badge__week hidden sm:inline-block">1/10</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegación principal -->
+    <nav class="mx-auto max-w-6xl px-4 pb-2" aria-label="Secciones principales">
+      <div class="tab-bar" role="tablist">
+        <button id="tab-outpost" class="tab-btn" type="button" role="tab" data-tab="outpost"
+          aria-selected="true" aria-controls="panel-outpost">
+          <i data-lucide="castle" aria-hidden="true"></i>
+          <span class="sm:hidden">Puesto</span>
+          <span class="hidden sm:inline">Fase de Puesto Avanzado</span>
+        </button>
+        <button id="tab-scenarios" class="tab-btn" type="button" role="tab" data-tab="scenarios"
+          aria-selected="false" aria-controls="panel-scenarios" tabindex="-1">
+          <i data-lucide="git-fork" aria-hidden="true"></i>
+          <span class="sm:hidden">Escenarios</span>
+          <span class="hidden sm:inline">Árbol de Escenarios</span>
+        </button>
+        <button id="tab-narrator" class="tab-btn" type="button" role="tab" data-tab="narrator"
+          aria-selected="false" aria-controls="panel-narrator" tabindex="-1">
+          <i data-lucide="audio-lines" aria-hidden="true"></i>
+          <span>Narrador</span>
+        </button>
+        <button id="tab-gallery" class="tab-btn" type="button" role="tab" data-tab="gallery"
+          aria-selected="false" aria-controls="panel-gallery" tabindex="-1">
+          <i data-lucide="trophy" aria-hidden="true"></i>
+          <span class="sm:hidden">Salón</span>
+          <span class="hidden sm:inline">Salón de los Héroes</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ============ CONTENIDO ============ -->
+  <main id="main" class="mx-auto max-w-6xl px-4 pt-4 pb-24 safe-bottom" tabindex="-1">
+    <section id="panel-outpost" class="tab-panel" role="tabpanel" aria-labelledby="tab-outpost" data-panel="outpost">
+      <div id="outpost-root">
+        <div class="panel-loading"><span class="spinner" aria-hidden="true"></span> Preparando el puesto avanzado…</div>
+      </div>
+    </section>
+
+    <section id="panel-scenarios" class="tab-panel" role="tabpanel" aria-labelledby="tab-scenarios" data-panel="scenarios" hidden>
+      <div id="flowchart-root">
+        <div class="panel-loading"><span class="spinner" aria-hidden="true"></span> Desplegando el mapa de escenarios…</div>
+      </div>
+    </section>
+
+    <section id="panel-narrator" class="tab-panel" role="tabpanel" aria-labelledby="tab-narrator" data-panel="narrator" hidden>
+      <div id="narrator-root">
+        <div class="panel-loading"><span class="spinner" aria-hidden="true"></span> Afinando la voz del narrador…</div>
+      </div>
+    </section>
+
+    <section id="panel-gallery" class="tab-panel" role="tabpanel" aria-labelledby="tab-gallery" data-panel="gallery" hidden>
+      <div id="gallery-root">
+        <div class="panel-loading"><span class="spinner" aria-hidden="true"></span> Abriendo el Salón de los Héroes…</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Capas globales: modales, lightbox y notificaciones -->
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" role="status" aria-live="polite" aria-atomic="false"></div>
+
+  <noscript>
+    <div class="boot-error">Esta aplicación necesita JavaScript activado para funcionar.</div>
+  </noscript>
+
+  <!-- Aviso si los módulos ES no llegan a arrancar (p. ej. abierto como file://) -->
+  <script>
+    window.setTimeout(function () {
+      if (window.__FH_BOOTED__) return;
+      var el = document.createElement('div');
+      el.className = 'boot-error';
+      el.innerHTML =
+        '<strong>No se pudo iniciar la aplicación.</strong><br>' +
+        (location.protocol === 'file:'
+          ? 'Los módulos ES no funcionan abriendo el archivo directamente. Sírvela con un servidor local (p. ej. <code>npx serve .</code>) o despliégala en GitHub Pages / Vercel.'
+          : 'Revisa la consola del navegador o recarga la página.');
+      document.body.appendChild(el);
+    }, 5000);
+  </script>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
